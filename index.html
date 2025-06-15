@@ -3,9 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aventura Espacial - Versão Completa Otimizada</title>
+    <title>Aventura Espacial</title>
+    <!-- Importa a fonte Orbitron do Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+        /* CSS INCLUÍDO DIRETAMENTE AQUI (CONTEÚDO DO style.css) */
+        html { /* NOVO: Garante que o HTML ocupe 100% da largura e altura */
+            height: 100%;
+            width: 100%;
+        }
         body {
             margin: 0; padding: 0; background: radial-gradient(ellipse at center, #0a0a0f 0%, #1a0a2e 30%, #2d1b3d 70%, #000000 100%);
             color: white; font-family: 'Orbitron', 'Courier New', monospace; display: flex;
@@ -158,6 +164,7 @@
     </div>
 
     <script>
+        // JAVASCRIPT INCLUÍDO DIRETAMENTE AQUI (CONTEÚDO DO script.js)
         window.addEventListener('DOMContentLoaded', () => {
             // --- SETUP INICIAL ---
             const canvas = document.getElementById('gameCanvas');
@@ -205,9 +212,9 @@
                 invincibilityDuration: 2000,
                 specialWeaponDuration: 5 * 60,
                 maxAsteroidSpawnRate: 0.08,
-                maxExplosionParticles: 300, // REDUZIDO: de 500 para 300 para menos impacto
-                bulletShadowBlur: 10, // NOVO: Blur da sombra da bala
-                homingBombShadowBlur: 10 // NOVO: Blur da sombra da bomba
+                maxExplosionParticles: 300,
+                bulletShadowBlur: 10,
+                homingBombShadowBlur: 10
             };
             let asteroidSpawnRate;
 
@@ -321,16 +328,15 @@
             }
 
             function gameLoop() {
-                // Atualiza e desenha as estrelas e partículas sempre, para animações de fundo/explosão
                 stars.forEach(s => { s.y += s.speed; if (s.y > canvas.height) { s.y = 0; s.x = Math.random() * canvas.width; } });
                 explosionParticles.forEach(p => { p.x += p.vx; p.y += p.vy; p.life -= p.decay; });
                 explosionParticles = explosionParticles.filter(p => p.life > 0);
 
                 if (gameState === 'playing') {
-                    update(); // Apenas atualiza a lógica do jogo se estiver jogando
+                    update();
                 }
                 
-                draw(); // Sempre desenha o estado atual, incluindo as telas de menu/game over
+                draw();
 
                 if (gameState !== 'initial_start' && gameState !== 'start' && gameState !== 'gameOver' && gameState !== 'exit') {
                     animationFrameId = requestAnimationFrame(gameLoop);
@@ -339,7 +345,6 @@
             
             // --- LÓGICA DE ATUALIZAÇÃO (UPDATE) ---
             function update() {
-                // Se o jogador está explodindo, nenhuma lógica de jogo deve rodar
                 if (playerIsExploding) return; 
 
                 if (keys['arrowleft'] && player.x > 0) player.x -= player.speed;
@@ -384,11 +389,8 @@
                 homingBombs.forEach(drawHomingBomb);
                 explosionParticles.forEach(drawParticle);
                 
-                if (!playerIsExploding && gameState === 'playing') { // Desenha o player apenas se jogando e não explodindo
+                if (!playerIsExploding && gameState === 'playing') {
                     drawPlayer();
-                } else if (!playerIsExploding && gameState !== 'playing' && gameState !== 'gameOver' && gameState !== 'paused') {
-                    // Se estiver em uma tela de menu mas não explodindo, podemos desenhar o player ali (opcional)
-                    // Atualmente não desenha o player nas telas de menu.
                 }
             }
             
@@ -468,26 +470,19 @@
             }
 
             function checkCollisions() {
-                // Balas vs Meteoros
                 for(let i = bullets.length - 1; i >= 0; i--) {
-                    let bulletRemoved = false; // Flag para saber se a bala foi removida
                     for(let j = asteroids.length - 1; j >= 0; j--) {
                         if(checkCollision(bullets[i], asteroids[j])) {
                             createExplosion(asteroids[j].x + asteroids[j].width / 2, asteroids[j].y + asteroids[j].height / 2, '#FFA500');
                             asteroids.splice(j, 1);
-                            bullets.splice(i, 1); // Remove a bala
+                            bullets.splice(i, 1);
                             score += 100;
                             updateUI();
-                            bulletRemoved = true;
-                            break; // Asteroide atingido, próxima bala
+                            break;
                         }
                     }
-                    // Se a bala foi removida, o índice 'i' já foi ajustado pelo splice,
-                    // mas queremos garantir que a próxima iteração do loop externo seja correta.
-                    // Como estamos iterando para trás, o splice não quebra a iteração no array de balas.
                 }
                 
-                // Jogador vs Meteoros
                 if(!player.invincible && !playerIsExploding){
                     for(let i = asteroids.length - 1; i >= 0; i--) {
                         if(checkCollision(player, asteroids[i])) {
@@ -499,7 +494,6 @@
                     }
                 }
                 
-                // Jogador vs Orbes de Energia
                 for(let i = energyOrbs.length - 1; i >= 0; i--) {
                     if(checkCollision(player, energyOrbs[i])) {
                         energyOrbs.splice(i, 1);
@@ -508,13 +502,11 @@
                     }
                 }
                 
-                // Bombas Teleguiadas vs Meteoros
                 for(let i = homingBombs.length - 1; i >= 0; i--) {
                     let bomb = homingBombs[i];
-                    // Se a bomba expirou a vida OU colidiu com seu alvo
                     if (bomb.life <= 0 || (bomb.target && checkCollision(bomb, bomb.target))) {
-                         handleBombImpact(bomb); // Lida com o impacto e explosão em área (e remove a bomba)
-                         break; // Sai do loop interno, pois a bomba já foi processada/removida
+                         handleBombImpact(bomb);
+                         break;
                     }
                 }
             }
@@ -545,8 +537,6 @@
                 let closestAsteroid = null; 
                 let minDist = Infinity;
                 
-                // Procura apenas entre os asteroides que estão visíveis na tela ou um pouco acima/abaixo
-                // Isso pode reduzir o número de asteroides a serem verificados
                 const visibleAsteroids = asteroids.filter(a => a.y > -a.height && a.y < canvas.height + a.height / 2);
 
                 visibleAsteroids.forEach(a => {
@@ -573,16 +563,12 @@
             function updateHomingBomb(bomb) {
                 bomb.life--;
                 
-                // Se o alvo não existe mais OU se a vida da bomba acabou, ela marca para ser removida
-                // Isso garante que bombas sem alvo sumam e bombas com tempo de vida expirado explodam
                 if (bomb.life <= 0 || (bomb.target && !asteroids.includes(bomb.target))) {
-                    // Causa uma pequena explosão para a bomba "desaparecer" se a vida acabar ou o alvo sumir
                     createExplosion(bomb.x, bomb.y, '#555555', 10);
-                    bomb.life = 0; // Garante que ela será filtrada
+                    bomb.life = 0;
                     return; 
                 }
                 
-                // Se o alvo ainda existe e a bomba ainda tem vida, ela persegue
                 const dx = bomb.target.x + bomb.target.width / 2 - bomb.x; 
                 const dy = bomb.target.y + bomb.target.height / 2 - bomb.y;
                 const dist = Math.hypot(dx, dy);
@@ -671,7 +657,7 @@
                 ctx.save();
                 ctx.fillStyle = b.color;
                 ctx.shadowColor = b.color;
-                ctx.shadowBlur = config.bulletShadowBlur; // USANDO NOVA CONFIG
+                ctx.shadowBlur = config.bulletShadowBlur;
                 ctx.fillRect(b.x, b.y, b.width, b.height);
                 ctx.restore();
             }
@@ -681,7 +667,7 @@
                 ctx.globalAlpha = 0.6 + Math.sin(orb.pulse) * 0.4; 
                 ctx.fillStyle = '#00aaff';
                 ctx.shadowColor = '#00ffff';
-                ctx.shadowBlur = 10; // REDUZIDO: de 20 para 10
+                ctx.shadowBlur = 10;
                 ctx.beginPath();
                 ctx.arc(orb.x + orb.width / 2, orb.y + orb.height / 2, orb.width, 0, Math.PI * 2);
                 ctx.fill();
@@ -692,7 +678,7 @@
                 ctx.save(); 
                 ctx.fillStyle = '#ff4500';
                 ctx.shadowColor = '#ff0000';
-                ctx.shadowBlur = config.homingBombShadowBlur; // USANDO NOVA CONFIG
+                ctx.shadowBlur = config.homingBombShadowBlur;
                 ctx.beginPath(); 
                 ctx.arc(bomb.x, bomb.y, bomb.width / 2, 0, Math.PI * 2); 
                 ctx.fill(); 
@@ -733,7 +719,7 @@
                     rotationSpeed: (Math.random() - 0.5) * 0.1,
                     shape: []
                 };
-                // REDUZIDO: de 7-11 vértices para 5-8 vértices
+                
                 const numVertices = 5 + Math.floor(Math.random() * 4); 
                 for(let i = 0; i < numVertices; i++){
                     const angle = (i / numVertices) * Math.PI * 2;
@@ -741,6 +727,17 @@
                     asteroid.shape.push({ x: Math.cos(angle) * radius, y: Math.sin(angle) * radius });
                 }
                 asteroids.push(asteroid);
+            }
+
+            function createEnergyOrb() {
+                energyOrbs.push({
+                    x: Math.random() * (canvas.width - 20),
+                    y: -20,
+                    width: 10,
+                    height: 10,
+                    speed: 2 + Math.random() * 2,
+                    pulse: 0
+                });
             }
 
             function createExplosion(x, y, color, count = 20) {
@@ -791,7 +788,7 @@
                     });
                 }
                 loadAndDisplayHighScore();
-                draw(); // Desenha a tela inicial com as estrelas (antes do gameLoop real)
+                draw();
             }
             
             init();
