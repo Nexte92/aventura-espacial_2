@@ -16,18 +16,30 @@
             margin: 0; padding: 0; background: radial-gradient(ellipse at center, #0a0a0f 0%, #1a0a2e 30%, #2d1b3d 70%, #000000 100%);
             color: white; font-family: 'Orbitron', 'Courier New', monospace; display: flex;
             justify-content: center; align-items: center; min-height: 100vh; overflow: hidden;
+            width: 100vw; /* Garante que o corpo ocupe 100% da largura do viewport */
+            height: 100vh; /* Garante que o corpo ocupe 100% da altura do viewport */
         }
         .game-container {
-            position: relative; width: 900px; height: 650px; border: 4px solid transparent;
+            position: relative; 
+            /* Para desktop e telas maiores, mantém as proporções e um tamanho máximo */
+            max-width: 95vw; /* Limita a largura máxima a 95% do viewport */
+            max-height: 95vh; /* Limita a altura máxima a 95% do viewport */
+            width: auto; /* Permite que a largura seja determinada pelo aspeto */
+            height: auto; /* Permite que a altura seja determinada pelo aspeto */
+            aspect-ratio: 900 / 650; /* Mantém a proporção original do jogo */
+            border: 4px solid transparent;
             background: linear-gradient(45deg, #ff00ff, #00ffff, #ffff00, #ff00ff) padding-box,
                                 linear-gradient(135deg, #001122 0%, #002244 30%, #001a33 70%, #000011 100%) border-box;
             border-radius: 20px; overflow: hidden;
             box-shadow: 0 0 50px rgba(255,0,255,0.4), 0 0 100px rgba(0,255,255,0.3), inset 0 0 50px rgba(0,20,40,0.8);
-            transform: perspective(1200px) rotateX(3deg) rotateY(-2deg);
+            transform: perspective(1200px) rotateX(3deg) rotateY(-2deg); /* Transformação 3D para desktop */
             transition: transform 0.1s ease-out;
+            box-sizing: border-box; /* Inclui padding e border na largura/altura total */
         }
         #gameCanvas {
             display: block;
+            width: 100%; /* O canvas ocupa 100% do seu container */
+            height: 100%; /* O canvas ocupa 100% do seu container */
             background: radial-gradient(circle at 30% 20%, rgba(255,0,255,0.1), transparent 50%),
                                 radial-gradient(circle at 70% 80%, rgba(0,255,255,0.1), transparent 50%),
                                 linear-gradient(180deg, #000011 0%, #001122 50%, #000011 100%);
@@ -167,6 +179,133 @@
             line-height: 1.5;
             max-width: 600px;
         }
+
+        /* NOVO: Estilos para Controles Móveis */
+        #mobile-controls {
+            display: none; /* Oculto por padrão, ativado via media query */
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            z-index: 50;
+            justify-content: space-between;
+            align-items: flex-end;
+            pointer-events: auto; /* Garante que os eventos de toque sejam registados */
+        }
+
+        .dpad-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .dpad-horizontal {
+            display: flex;
+            gap: 8px;
+        }
+        .action-buttons-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* Espaço maior entre botões de ação */
+        }
+
+        .dpad-btn, .action-btn {
+            background: rgba(0, 50, 100, 0.7);
+            border: 2px solid #00ffff;
+            color: #00ffff;
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2rem;
+            width: 55px; /* Tamanho ajustado para toque */
+            height: 55px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+            transition: background 0.1s, box-shadow 0.1s, transform 0.1s;
+            user-select: none; /* Previne seleção de texto no toque */
+            -webkit-tap-highlight-color: transparent; /* Remove highlight de toque no móvel */
+        }
+        .action-btn {
+            width: 70px; /* Botões maiores para ações */
+            height: 70px;
+            border-radius: 15px; /* Botões mais quadrados */
+            font-size: 1rem;
+            background: linear-gradient(45deg, #ff0080, #ff4080);
+            box-shadow: 0 0 10px rgba(255, 0, 128, 0.6);
+            border-color: #ff4080;
+        }
+        #touch-special { /* Estilo específico para o botão de arma especial */
+            background: linear-gradient(45deg, #00bfff, #007bff);
+            box-shadow: 0 0 10px rgba(0, 191, 255, 0.6);
+            border-color: #007bff;
+        }
+
+        .dpad-btn:active, .action-btn:active {
+            background: rgba(0, 100, 200, 0.9);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.8);
+            transform: scale(0.95);
+        }
+
+        /* Media query para dispositivos móveis (largura máxima de 768px) */
+        @media (max-width: 768px) {
+            .controls { /* Oculta a dica de controlos de teclado no móvel */
+                display: none;
+            }
+            #mobile-controls { /* Mostra os controlos de toque no móvel */
+                display: flex;
+            }
+            .game-container {
+                /* NOVO: Em dispositivos móveis, tenta ocupar 100% da largura e altura do viewport. */
+                /* A propriedade aspect-ratio irá garantir que o jogo não seja esticado, */
+                /* criando barras pretas se a proporção do dispositivo não for igual à do jogo. */
+                width: 100vw;
+                height: 100vh;
+                max-width: 100vw; /* Garante que não exceda o viewport */
+                max-height: 100vh; /* Garante que não exceda o viewport */
+
+                transform: perspective(1200px) rotateX(0deg) rotateY(0deg); /* Remove transform em móvel */
+                border-width: 2px;
+                border-radius: 10px;
+            }
+            .game-container .ui {
+                top: 5px; /* Ajusta a posição da UI */
+                left: 5px;
+                right: 5px;
+                flex-wrap: wrap; /* Permite que os elementos da UI quebrem a linha */
+                gap: 5px;
+            }
+            .score, .lives, .mission, .power {
+                padding: 5px 10px;
+                font-size: 12px;
+                border-radius: 15px;
+            }
+            .power-bar {
+                width: 80px;
+            }
+            .pause-btn {
+                padding: 5px 10px;
+                font-size: 12px;
+                border-radius: 15px;
+            }
+            .overlay h1 {
+                font-size: 2.5rem; /* Títulos de overlay mais pequenos */
+            }
+            .overlay p {
+                font-size: 1rem; /* Texto de overlay mais pequeno */
+            }
+            .start-btn, .restart-btn, .exit-btn, .resume-btn, .briefing-btn {
+                padding: 10px 20px;
+                font-size: 16px;
+                border-radius: 20px;
+            }
+            #missionBriefingModal h2 {
+                font-size: 1.8rem;
+            }
+            #missionBriefingText, #gameOverDebriefingText {
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -217,6 +356,22 @@
             <button class="briefing-btn" id="continueBriefingBtn">Continuar Missão</button>
         </div>
 
+        <!-- NOVO: Container para Controles Móveis -->
+        <div id="mobile-controls">
+            <div class="dpad-container">
+                <button id="touch-up" class="dpad-btn">&#9650;</button>
+                <div class="dpad-horizontal">
+                    <button id="touch-left" class="dpad-btn">&#9664;</button>
+                    <button id="touch-right" class="dpad-btn">&#9654;</button>
+                </div>
+                <button id="touch-down" class="dpad-btn">&#9660;</button>
+            </div>
+            <div class="action-buttons-container">
+                <button id="touch-shoot" class="action-btn">Tiro</button>
+                <button id="touch-special" class="action-btn">Bomba</button>
+            </div>
+        </div>
+        
         <div class="controls">🚀 Setas: Pilotar | Espaço: Tiro | X: Bombas Teleguiadas (Energia 100%) 🌟</div>
     </div>
 
@@ -228,7 +383,7 @@
             const ctx = canvas.getContext('2d');
             const gameContainer = document.querySelector('.game-container');
             
-            // Referências aos elementos da UI
+            // Referências aos elementos da UI e Controles Móveis
             const ui = {
                 score: document.getElementById('score'),
                 mission: document.getElementById('mission'),
@@ -259,7 +414,16 @@
                 startBtn: document.querySelector('#startScreen .start-btn'),
                 restartBtn: document.querySelector('#gameOverScreen .restart-btn'),
                 exitBtn: document.querySelector('#pauseScreen .exit-btn'),
-                resumeBtn: document.querySelector('#pauseScreen .resume-btn')
+                resumeBtn: document.querySelector('#pauseScreen .resume-btn'),
+
+                // NOVO: Elementos de controle móvel
+                mobileControls: document.getElementById('mobile-controls'),
+                touchUp: document.getElementById('touch-up'),
+                touchDown: document.getElementById('touch-down'),
+                touchLeft: document.getElementById('touch-left'),
+                touchRight: document.getElementById('touch-right'),
+                touchShoot: document.getElementById('touch-shoot'),
+                touchSpecial: document.getElementById('touch-special')
             };
 
             // --- VARIÁVEIS DE ESTADO ---
@@ -272,7 +436,8 @@
 
             const config = { 
                 asteroidSpeedBase: 1.5,
-                playerSpeed: 5, 
+                playerSpeedBase: 5, 
+                playerSpeedIncrease: 0.2, 
                 asteroidSpawnRateBase: 0.02,
                 energyOrbSpawnRate: 0.008,
                 invincibilityDuration: 2000,
@@ -280,12 +445,16 @@
                 maxAsteroidSpawnRate: 0.08,
                 maxExplosionParticles: 300,
                 bulletShadowBlur: 10,
-                homingBombShadowBlur: 10
+                homingBombShadowBlur: 10,
+                homingBombFireRate: 10 
             };
             let asteroidSpawnRate;
 
-            const player = { x: 0, y: 0, width: 40, height: 40, speed: config.playerSpeed, invincible: false };
-            const keys = {};
+            const player = { x: 0, y: 0, width: 40, height: 40, speed: config.playerSpeedBase, invincible: false }; 
+            const keys = {}; // Usado para controlos de teclado E toque
+
+            let lastShootTime = 0; // Para controle de cadência de tiro no toque
+            const touchShootCooldown = 200; // ms, para evitar múltiplos tiros com um toque
 
             // --- LISTENERS DE EVENTOS ---
             ui.initialStartButton.addEventListener('click', () => {
@@ -300,7 +469,7 @@
             ui.exitBtn.addEventListener('click', exitGame);
             ui.pauseBtn.addEventListener('click', togglePause);
             ui.resumeBtn.addEventListener('click', togglePause);
-            ui.continueBriefingBtn.addEventListener('click', hideMissionBriefingAndStartGame); // Novo listener para continuar a missão
+            ui.continueBriefingBtn.addEventListener('click', hideMissionBriefingAndStartGame); 
 
             document.addEventListener('keydown', (e) => {
                 const key = e.key.toLowerCase(); 
@@ -312,7 +481,6 @@
                     return;
                 }
 
-                // Impede input do jogo enquanto o briefing está ativo
                 if (gameState !== 'playing' || playerIsExploding || ui.missionBriefingModal.style.display === 'flex') return;
 
                 if (key === ' ') { 
@@ -327,6 +495,84 @@
 
             document.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
             
+            // NOVO: Configura listeners para controlos de toque
+            function setupTouchControls() {
+                // Funções auxiliares para toque
+                const handleTouchStart = (e, keyName) => {
+                    e.preventDefault(); // Previne o zoom da página e outros comportamentos padrão
+                    if (keyName) keys[keyName] = true;
+                };
+                const handleTouchEnd = (e, keyName) => {
+                    e.preventDefault();
+                    if (keyName) keys[keyName] = false;
+                };
+
+                // D-Pad
+                ui.touchUp.addEventListener('touchstart', (e) => handleTouchStart(e, 'arrowup'));
+                ui.touchUp.addEventListener('touchend', (e) => handleTouchEnd(e, 'arrowup'));
+                ui.touchDown.addEventListener('touchstart', (e) => handleTouchStart(e, 'arrowdown'));
+                ui.touchDown.addEventListener('touchend', (e) => handleTouchEnd(e, 'arrowdown'));
+                ui.touchLeft.addEventListener('touchstart', (e) => handleTouchStart(e, 'arrowleft'));
+                ui.touchLeft.addEventListener('touchend', (e) => handleTouchEnd(e, 'arrowleft'));
+                ui.touchRight.addEventListener('touchstart', (e) => handleTouchStart(e, 'arrowright'));
+                ui.touchRight.addEventListener('touchend', (e) => handleTouchEnd(e, 'arrowright'));
+
+                // Botões de Ação
+                ui.touchShoot.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    const currentTime = Date.now();
+                    if (gameState === 'playing' && !playerIsExploding && (currentTime - lastShootTime > touchShootCooldown)) {
+                        shoot();
+                        lastShootTime = currentTime;
+                    }
+                });
+
+                ui.touchSpecial.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    if (gameState === 'playing' && !playerIsExploding) {
+                        activateSpecialWeapon();
+                    }
+                });
+            }
+
+            // NOVO: Função para ajustar o tamanho do canvas de forma responsiva
+            function resizeCanvas() {
+                const containerRect = gameContainer.getBoundingClientRect(); // Obtém o tamanho real do container
+
+                // Tenta manter a proporção original do jogo (900x650)
+                const originalAspectRatio = 900 / 650;
+                let newWidth = containerRect.width;
+                let newHeight = containerRect.width / originalAspectRatio;
+
+                // Se a altura calculada for maior que a altura disponível, ajusta pela altura
+                if (newHeight > containerRect.height) {
+                    newHeight = containerRect.height;
+                    newWidth = containerRect.height * originalAspectRatio;
+                }
+
+                canvas.width = newWidth;
+                canvas.height = newHeight;
+
+                // Reposiciona o jogador caso o canvas mude de tamanho dramaticamente
+                player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+                player.y = Math.max(0, Math.min(canvas.height - player.height, player.y));
+
+                // Redistribui as estrelas para a nova resolução
+                stars = [];
+                for(let i = 0; i < 150; i++) {
+                    stars.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        size: Math.random() * 2 + 0.5,
+                        speed: Math.random() * 0.5 + 0.2,
+                        alpha: Math.random() * 0.8
+                    });
+                }
+
+                // Desenha imediatamente após o redimensionamento para evitar tela vazia
+                draw();
+            }
+
             // --- FUNÇÕES LLM (GEMINI API) ---
             async function generateTextWithGemini(prompt, targetElement, loadingElement) {
                 targetElement.innerText = ''; // Limpa o texto anterior
@@ -355,7 +601,7 @@
                         targetElement.innerText = 'Não foi possível gerar a informação. Tente novamente.';
                         console.error('Estrutura de resposta inesperada do Gemini API:', result);
                     }
-                } catch (error) {
+                }  catch (error) {
                     targetElement.innerText = 'Erro ao conectar com a API Gemini. Verifique a sua ligação à internet.';
                     console.error('Erro ao chamar Gemini API:', error);
                 } finally {
@@ -366,7 +612,6 @@
             async function showMissionBriefing() {
                 gameState = 'briefing'; // Novo estado para o briefing
                 ui.missionBriefingModal.style.display = 'flex';
-                // Adapta o prompt para a missão atual e a dificuldade
                 const prompt = `Gera um breve e inspirador briefing para a Missão ${currentMission} de um jogo de nave espacial. Descreve o desafio que o jogador irá enfrentar e um objetivo heroico a alcançar. A dificuldade está a aumentar. Mantém o tom sci-fi e encorajador.`;
                 await generateTextWithGemini(prompt, ui.missionBriefingText, ui.loadingBriefing);
             }
@@ -379,7 +624,7 @@
 
             async function showGameOverDebriefing() {
                 const highscore = parseInt(localStorage.getItem('spaceShooterHighScore') || 0);
-                const prompt = `O jogador falhou a Missão ${currentMission} com uma pontuação de ${score}. O recorde atual é ${highscore}. Gera uma mensagem de debriefing. Se a pontuação for muito baixa, sugere melhorias. Se a pontuação for alta, mas falhou, dá uma mensagem de reconhecimento e encorajamento para a próxima tentativa.`;
+                const prompt = `Gera um relatório de debriefing conciso e de fácil leitura para o jogador. Ele falhou a Missão ${currentMission} com ${score} pontos, e o recorde atual é ${highscore}. Inclui uma análise breve do desempenho e conselhos práticos para a próxima tentativa, mantendo um tom encorajador e objetivo. O texto deve ser resumido e direto ao ponto.`;
                 await generateTextWithGemini(prompt, ui.gameOverDebriefingText, ui.loadingDebriefing);
             }
 
@@ -387,7 +632,6 @@
             function startGame() {
                 ui.startScreen.style.display = 'none';
                 resetGame();
-                // Não inicia gameLoop imediatamente, espera pelo briefing
                 showMissionBriefing();
             }
 
@@ -431,11 +675,13 @@
                 nextMissionScore = 5000;
                 
                 asteroidSpawnRate = config.asteroidSpawnRateBase; 
+                player.speed = config.playerSpeedBase; 
                 powerLevel = 0; 
                 maxPowerLevel = 100;
                 specialWeaponActive = false; 
                 specialWeaponTimer = 0;
 
+                // Inicializa as listas de entidades para evitar 'undefined' antes do primeiro draw
                 asteroids = []; 
                 bullets = []; 
                 energyOrbs = []; 
@@ -462,9 +708,7 @@
                 
                 draw();
 
-                // Só continua o loop se o jogo está a decorrer (playing) ou pausado, ou durante a explosão do player.
-                // Não chama requestAnimationFrame se estiver nas telas de menu/game over/briefing.
-                if (gameState === 'playing' || gameState === 'paused' || (gameState === 'gameOver' && playerIsExploding) || gameState === 'briefing') {
+                if (gameState === 'playing' || gameState === 'paused' || (gameState === 'gameOver' && explosionParticles.length > 0) || gameState === 'briefing') {
                     animationFrameId = requestAnimationFrame(gameLoop);
                 }
             }
@@ -473,6 +717,7 @@
             function update() {
                 if (playerIsExploding) return; 
 
+                // Movimento do jogador baseado na player.speed atual
                 if (keys['arrowleft'] && player.x > 0) player.x -= player.speed;
                 if (keys['arrowright'] && player.x < canvas.width - player.width) player.x += player.speed;
                 if (keys['arrowup'] && player.y > 0) player.y -= player.speed;
@@ -492,7 +737,7 @@
 
                 if (specialWeaponActive) {
                     specialWeaponTimer--;
-                    if (specialWeaponTimer % 30 === 0) createHomingBomb(); 
+                    if (specialWeaponTimer % config.homingBombFireRate === 0) createHomingBomb(); 
                     if (specialWeaponTimer <= 0) specialWeaponActive = false;
                 }
 
@@ -556,15 +801,16 @@
             function progressToNextMission() { 
                 currentMission++; 
                 nextMissionScore += 5000;
-                config.asteroidSpeedBase += 0.2;
+                config.asteroidSpeedBase += 0.2; 
                 asteroidSpawnRate = Math.min(config.maxAsteroidSpawnRate, asteroidSpawnRate + 0.005); 
+                
+                player.speed += config.playerSpeedIncrease;
                 
                 ui.mission.innerText = currentMission; 
                 ui.missionComplete.style.display = 'flex'; 
                 
                 setTimeout(() => {
                     ui.missionComplete.style.display = 'none';
-                    // Chama o briefing da nova missão após a mensagem "MISSÃO ATUALIZADA" desaparecer
                     showMissionBriefing(); 
                 }, 2000); 
             }
@@ -580,15 +826,15 @@
                     createExplosion(player.x + player.width / 2, player.y + player.height / 2, '#ff4444', 100);
                     shakeScreen(800, 8);
                     
-                    setTimeout(async () => { // Usar async aqui para await
+                    setTimeout(async () => {
                         gameState = 'gameOver'; 
                         checkAndSaveHighScore(); 
                         loadAndDisplayHighScore();
                         ui.finalScore.innerText = score; 
                         ui.gameOverScreen.style.display = 'flex';
                         playerIsExploding = false;
-                        await showGameOverDebriefing(); // Chama o debriefing LLM
-                        gameLoop(); // Garante que o loop continue para manter o debriefing visível
+                        await showGameOverDebriefing(); 
+                        gameLoop(); 
                     }, 2000);
                 } else {
                     player.invincible = true;
@@ -603,12 +849,16 @@
                 for(let i = bullets.length - 1; i >= 0; i--) {
                     for(let j = asteroids.length - 1; j >= 0; j--) {
                         if(checkCollision(bullets[i], asteroids[j])) {
-                            createExplosion(asteroids[j].x + asteroids[j].width / 2, asteroids[j].y + asteroids[j].height / 2, '#FFA500');
-                            asteroids.splice(j, 1);
-                            bullets.splice(i, 1);
-                            score += 100;
+                            asteroids[j].hits--; 
+                            bullets.splice(i, 1); 
+                            
+                            if (asteroids[j].hits <= 0) { 
+                                createExplosion(asteroids[j].x + asteroids[j].width / 2, asteroids[j].y + asteroids[j].height / 2, '#FFA500');
+                                asteroids.splice(j, 1); 
+                                score += 100; 
+                            }
                             updateUI();
-                            break;
+                            break; 
                         }
                     }
                 }
@@ -635,7 +885,10 @@
                 for(let i = homingBombs.length - 1; i >= 0; i--) {
                     let bomb = homingBombs[i];
                     if (bomb.life <= 0 || (bomb.target && checkCollision(bomb, bomb.target))) {
-                         handleBombImpact(bomb);
+                        if (bomb.target && asteroids.includes(bomb.target)) {
+                            bomb.target.hits--; 
+                        }
+                         handleBombImpact(bomb); 
                          break;
                     }
                 }
@@ -694,8 +947,8 @@
                 bomb.life--;
                 
                 if (bomb.life <= 0 || (bomb.target && !asteroids.includes(bomb.target))) {
-                    createExplosion(bomb.x, bomb.y, '#555555', 10);
-                    bomb.life = 0;
+                    createExplosion(bomb.x, bomb.y, '#555555', 10); 
+                    bomb.life = 0; 
                     return; 
                 }
                 
@@ -719,10 +972,13 @@
                 
                 for (let i = asteroids.length - 1; i >= 0; i--) {
                     const a = asteroids[i];
-                    if (Math.hypot(a.x - bomb.x, a.y - bomb.y) < explosionRadius) {
-                        createExplosion(a.x + a.width / 2, a.y + a.height / 2, '#FFA500');
-                        asteroids.splice(i, 1); 
-                        score += 50;
+                    if (a.hits > 0 && Math.hypot(a.x - bomb.x, a.y - bomb.y) < explosionRadius) {
+                        a.hits--; 
+                        if (a.hits <= 0) { 
+                            createExplosion(a.x + a.width / 2, a.y + a.height / 2, '#FFA500');
+                            asteroids.splice(i, 1); 
+                            score += 50;
+                        }
                     }
                 }
                 updateUI();
@@ -847,7 +1103,8 @@
                     speed,
                     rotation: 0,
                     rotationSpeed: (Math.random() - 0.5) * 0.1,
-                    shape: []
+                    shape: [],
+                    hits: Math.ceil(size / 15) 
                 };
                 
                 const numVertices = 5 + Math.floor(Math.random() * 4); 
@@ -907,7 +1164,18 @@
             
             // --- INICIALIZAÇÃO DO JOGO ---
             function init() {
-                stars = [];
+                // Inicializa todas as listas de entidades para garantir que sejam arrays antes de qualquer forEach
+                stars = []; 
+                asteroids = []; 
+                bullets = []; 
+                energyOrbs = []; 
+                homingBombs = []; 
+                explosionParticles = [];
+
+                // Chama a função de redimensionamento ao iniciar e no resize da janela
+                resizeCanvas();
+                window.addEventListener('resize', resizeCanvas);
+
                 for(let i = 0; i < 150; i++) {
                     stars.push({
                         x: Math.random() * canvas.width,
@@ -918,7 +1186,9 @@
                     });
                 }
                 loadAndDisplayHighScore();
-                draw();
+                draw(); // Inicializa o desenho da tela
+
+                setupTouchControls(); // Configura os controlos de toque
             }
             
             init();
