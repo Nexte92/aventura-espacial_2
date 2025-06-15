@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <style>
         /* CSS INCLUÍDO DIRETAMENTE AQUI (CONTEÚDO DO style.css) */
-        html { /* NOVO: Garante que o HTML ocupe 100% da largura e altura */
+        html { /* Garante que o HTML ocupe 100% da largura e altura */
             height: 100%;
             width: 100%;
         }
@@ -94,7 +94,7 @@
         .overlay h1 { font-size: 4rem; text-shadow: 0 0 20px #fff, 0 0 40px #ff00ff; }
         .overlay p { font-size: 1.2rem; color: #eee; margin-top: 10px; }
         
-        .start-btn, .restart-btn, .exit-btn, .resume-btn {
+        .start-btn, .restart-btn, .exit-btn, .resume-btn, .briefing-btn { /* Adicionado .briefing-btn */
             border: none; padding: 15px 30px; border-radius: 30px; color: white;
             font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px;
             transition: transform 0.2s, box-shadow 0.2s;
@@ -106,6 +106,14 @@
         .start-btn:hover, .restart-btn:hover, .resume-btn:hover {
             transform: scale(1.05);
             box-shadow: 0 0 20px rgba(255, 0, 128, 0.8), 0 0 30px rgba(255, 64, 128, 0.5);
+        }
+        .briefing-btn { /* Estilo para o botão do briefing */
+            background: linear-gradient(45deg, #00bfff, #007bff);
+            box-shadow: 0 0 15px rgba(0, 191, 255, 0.6);
+        }
+        .briefing-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 191, 255, 0.8), 0 0 30px rgba(0, 123, 255, 0.5);
         }
         .exit-btn { 
             background: linear-gradient(45deg, #ff8c00, #ff4500); 
@@ -121,6 +129,43 @@
             text-align: center; font-size: 12px; color: #888;
             background: rgba(0,0,0,0.4); padding: 5px 15px; border-radius: 10px;
             box-shadow: inset 0 0 5px rgba(0,255,255,0.2);
+        }
+        /* Estilos para o Modal de Briefing da Missão */
+        #missionBriefingModal {
+            display: none; /* Inicia oculto */
+            background: rgba(0,0,0,0.9);
+            z-index: 30; /* Acima de outras overlays */
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid #00ffff;
+            box-shadow: 0 0 30px rgba(0,255,255,0.5), inset 0 0 20px rgba(0,100,100,0.8);
+            max-width: 700px;
+            margin: 20px;
+        }
+        #missionBriefingModal h2 {
+            font-size: 2.5rem;
+            color: #00ffff;
+            text-shadow: 0 0 15px #00ffff;
+            margin-bottom: 20px;
+        }
+        #missionBriefingText {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            color: #e0f7fa;
+        }
+        #loadingBriefing, #loadingDebriefing {
+            color: #00ffff;
+            font-size: 1.2rem;
+            text-shadow: 0 0 5px #00ffff;
+        }
+        /* Estilos para o texto de Debriefing no Game Over */
+        #gameOverDebriefingText {
+            margin-top: 20px;
+            font-size: 1.1rem;
+            color: #e0f7fa;
+            line-height: 1.5;
+            max-width: 600px;
         }
     </style>
 </head>
@@ -152,6 +197,9 @@
               <h1>MISSÃO FALHADA</h1>
               <p>Pontuação Final: <span id="finalScore">0</span></p>
               <p>Recorde: <span id="gameOverHighScore">0</span></p>
+              <!-- Novo elemento para o debriefing do LLM -->
+              <p id="gameOverDebriefingText" aria-live="polite"></p>
+              <div id="loadingDebriefing" style="display: none;" aria-live="assertive">A gerar relatório...</div>
               <button class="restart-btn">Tentar Novamente</button>
         </div>
 
@@ -160,11 +208,20 @@
               <button class="resume-btn">Continuar</button>
               <button class="exit-btn">Sair do Jogo</button>
         </div>
+
+        <!-- Novo Modal para Briefing da Missão LLM -->
+        <div class="overlay" id="missionBriefingModal" style="display: none;">
+            <h2>✨ Briefing da Missão ✨</h2>
+            <p id="missionBriefingText" aria-live="polite"></p>
+            <div id="loadingBriefing" style="display: none;" aria-live="assertive">A carregar briefing...</div>
+            <button class="briefing-btn" id="continueBriefingBtn">Continuar Missão</button>
+        </div>
+
         <div class="controls">🚀 Setas: Pilotar | Espaço: Tiro | X: Bombas Teleguiadas (Energia 100%) 🌟</div>
     </div>
 
     <script>
-        // JAVASCRIPT INCLUÍDO DIRETAMENTE AQUI (CONTEÚDO DO script.js)
+        // JAVASCRIPT INCLUÍDO DIRETAMENTE AQUI
         window.addEventListener('DOMContentLoaded', () => {
             // --- SETUP INICIAL ---
             const canvas = document.getElementById('gameCanvas');
@@ -189,6 +246,15 @@
                 finalScore: document.getElementById('finalScore'),
                 startHighScore: document.getElementById('startHighScore'),
                 gameOverHighScore: document.getElementById('gameOverHighScore'),
+                
+                // Elementos da nova funcionalidade LLM
+                missionBriefingModal: document.getElementById('missionBriefingModal'),
+                missionBriefingText: document.getElementById('missionBriefingText'),
+                loadingBriefing: document.getElementById('loadingBriefing'),
+                continueBriefingBtn: document.getElementById('continueBriefingBtn'),
+                gameOverDebriefingText: document.getElementById('gameOverDebriefingText'),
+                loadingDebriefing: document.getElementById('loadingDebriefing'),
+
                 initialStartButton: document.getElementById('initialStartButton'),
                 startBtn: document.querySelector('#startScreen .start-btn'),
                 restartBtn: document.querySelector('#gameOverScreen .restart-btn'),
@@ -234,6 +300,7 @@
             ui.exitBtn.addEventListener('click', exitGame);
             ui.pauseBtn.addEventListener('click', togglePause);
             ui.resumeBtn.addEventListener('click', togglePause);
+            ui.continueBriefingBtn.addEventListener('click', hideMissionBriefingAndStartGame); // Novo listener para continuar a missão
 
             document.addEventListener('keydown', (e) => {
                 const key = e.key.toLowerCase(); 
@@ -245,7 +312,8 @@
                     return;
                 }
 
-                if (gameState !== 'playing' || playerIsExploding) return;
+                // Impede input do jogo enquanto o briefing está ativo
+                if (gameState !== 'playing' || playerIsExploding || ui.missionBriefingModal.style.display === 'flex') return;
 
                 if (key === ' ') { 
                     e.preventDefault();
@@ -259,13 +327,68 @@
 
             document.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
             
+            // --- FUNÇÕES LLM (GEMINI API) ---
+            async function generateTextWithGemini(prompt, targetElement, loadingElement) {
+                targetElement.innerText = ''; // Limpa o texto anterior
+                loadingElement.style.display = 'block'; // Mostra o loading
+
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = { contents: chatHistory };
+                const apiKey = ""; // Canvas fornece a chave API em tempo de execução
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        targetElement.innerText = text;
+                    } else {
+                        targetElement.innerText = 'Não foi possível gerar a informação. Tente novamente.';
+                        console.error('Estrutura de resposta inesperada do Gemini API:', result);
+                    }
+                } catch (error) {
+                    targetElement.innerText = 'Erro ao conectar com a API Gemini. Verifique a sua ligação à internet.';
+                    console.error('Erro ao chamar Gemini API:', error);
+                } finally {
+                    loadingElement.style.display = 'none'; // Esconde o loading
+                }
+            }
+
+            async function showMissionBriefing() {
+                gameState = 'briefing'; // Novo estado para o briefing
+                ui.missionBriefingModal.style.display = 'flex';
+                // Adapta o prompt para a missão atual e a dificuldade
+                const prompt = `Gera um breve e inspirador briefing para a Missão ${currentMission} de um jogo de nave espacial. Descreve o desafio que o jogador irá enfrentar e um objetivo heroico a alcançar. A dificuldade está a aumentar. Mantém o tom sci-fi e encorajador.`;
+                await generateTextWithGemini(prompt, ui.missionBriefingText, ui.loadingBriefing);
+            }
+
+            function hideMissionBriefingAndStartGame() {
+                ui.missionBriefingModal.style.display = 'none';
+                gameState = 'playing'; // Retorna ao jogo
+                gameLoop(); // Retoma o loop principal do jogo
+            }
+
+            async function showGameOverDebriefing() {
+                const highscore = parseInt(localStorage.getItem('spaceShooterHighScore') || 0);
+                const prompt = `O jogador falhou a Missão ${currentMission} com uma pontuação de ${score}. O recorde atual é ${highscore}. Gera uma mensagem de debriefing. Se a pontuação for muito baixa, sugere melhorias. Se a pontuação for alta, mas falhou, dá uma mensagem de reconhecimento e encorajamento para a próxima tentativa.`;
+                await generateTextWithGemini(prompt, ui.gameOverDebriefingText, ui.loadingDebriefing);
+            }
+
             // --- CONTROLE DE JOGO (FLUXO PRINCIPAL) ---
             function startGame() {
                 ui.startScreen.style.display = 'none';
                 resetGame();
-                gameState = 'playing';
-                if (animationFrameId) cancelAnimationFrame(animationFrameId);
-                gameLoop();
+                // Não inicia gameLoop imediatamente, espera pelo briefing
+                showMissionBriefing();
             }
 
             function restartGame() {
@@ -325,6 +448,7 @@
 
                 updateUI(); 
                 updatePowerUI();
+                ui.gameOverDebriefingText.innerText = ''; // Limpa o debriefing anterior
             }
 
             function gameLoop() {
@@ -338,7 +462,9 @@
                 
                 draw();
 
-                if (gameState !== 'initial_start' && gameState !== 'start' && gameState !== 'gameOver' && gameState !== 'exit') {
+                // Só continua o loop se o jogo está a decorrer (playing) ou pausado, ou durante a explosão do player.
+                // Não chama requestAnimationFrame se estiver nas telas de menu/game over/briefing.
+                if (gameState === 'playing' || gameState === 'paused' || (gameState === 'gameOver' && playerIsExploding) || gameState === 'briefing') {
                     animationFrameId = requestAnimationFrame(gameLoop);
                 }
             }
@@ -438,6 +564,8 @@
                 
                 setTimeout(() => {
                     ui.missionComplete.style.display = 'none';
+                    // Chama o briefing da nova missão após a mensagem "MISSÃO ATUALIZADA" desaparecer
+                    showMissionBriefing(); 
                 }, 2000); 
             }
             
@@ -452,13 +580,15 @@
                     createExplosion(player.x + player.width / 2, player.y + player.height / 2, '#ff4444', 100);
                     shakeScreen(800, 8);
                     
-                    setTimeout(() => {
+                    setTimeout(async () => { // Usar async aqui para await
                         gameState = 'gameOver'; 
                         checkAndSaveHighScore(); 
                         loadAndDisplayHighScore();
                         ui.finalScore.innerText = score; 
                         ui.gameOverScreen.style.display = 'flex';
                         playerIsExploding = false;
+                        await showGameOverDebriefing(); // Chama o debriefing LLM
+                        gameLoop(); // Garante que o loop continue para manter o debriefing visível
                     }, 2000);
                 } else {
                     player.invincible = true;
